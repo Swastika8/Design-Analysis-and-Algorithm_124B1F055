@@ -1,4 +1,4 @@
-**Assignment-08: University Timetable Scheduling**
+**Assignment-07: University Timetable Scheduling**
 
 A university is facing challenges in scheduling exam timetables due to overlapping student
 enrollments in multiple courses. To prevent clashes, the university needs to assign exam
