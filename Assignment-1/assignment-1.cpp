@@ -2,97 +2,131 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <string>
+#include <algorithm>
 using namespace std;
 
-
-struct Order
-{
-   string orderID;
-   string orderDate;
+struct Record {
+    string name;
+    double price;
+    int units_sold;
+    double rating;
 };
 
+// Quicksort
+void quickSort(vector<Record>& data, int low, int high, int choice) {
+    if (low >= high)
+        return;
 
-void merge(vector<Order>& orders, int left, int mid, int right)
-{
-   int n1 = mid - left + 1;
-   int n2 = right - mid;
-   vector<Order> L(n1), R(n2);
-   for (int i = 0; i < n1; i++)
-       L[i] = orders[left + i];
-   for (int j = 0; j < n2; j++)
-       R[j] = orders[mid + 1 + j];
-   int i = 0;
-   int j = 0;
-   int k = left;
-   while (i < n1 && j < n2)
-   {
-       if (L[i].orderDate <= R[j].orderDate)
-       {
-           orders[k] = L[i];
-           i++;
-       }
-       else
-       {
-           orders[k] = R[j];
-           j++;
-       }
-       k++;
-   }
-   while (i < n1)
-   {
-       orders[k] = L[i];
-       i++;
-       k++;
-   }
-   while (j < n2)
-   {
-       orders[k] = R[j];
-       j++;
-       k++;
-   }
+    int i = low;
+    int j = high;
+    Record pivot = data[(low + high) / 2];
+    while (i <= j) {
+        // CHANGE THESE COMPARISONS FOR EACH PROBLEM
+        if (choice == 1) {
+            while (data[i].price < pivot.price)
+                i++;
+            while (data[j].price > pivot.price)
+                j--;
+        }
+        else if (choice == 2) {
+            while (data[i].units_sold < pivot.units_sold)
+                i++;
+            while (data[j].units_sold > pivot.units_sold)
+                j--;
+        }
+        else {
+            while (data[i].rating < pivot.rating)
+                i++;
+            while (data[j].rating > pivot.rating)
+                j--;
+        }
+        if (i <= j) {
+            swap(data[i], data[j]);
+            i++;
+            j--;
+        }
+    }
+    if (low < j)
+        quickSort(data, low, j, choice);
+    if (i < high)
+        quickSort(data, i, high, choice);
 }
-void mergeSort(vector<Order>& orders, int left, int right)
-{
-   if (left < right)
-   {
-       int mid = left + (right - left) / 2;
 
+int main() {
+    vector<Record> data;
+    // CHANGE CSV FILE NAME HERE
+    ifstream file("ecommerce_dataset.csv");
+    if (!file) {
+        cout << "Error opening file!";
+        return 1;
+    }
 
-       mergeSort(orders, left, mid);
-       mergeSort(orders, mid + 1, right);
-       merge(orders, left, mid, right);
-   }
+    string line;
+    // Skip header
+    getline(file, line);
+
+    // Read CSV
+    // Actual column order in this file:
+    // product_id, product_name, category, price, units_sold, rating, in_stock
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string temp;
+        Record r;
+
+        getline(ss, temp, ',');        // product_id -> skip
+        getline(ss, r.name, ',');      // product_name
+        getline(ss, temp, ',');        // category -> skip
+        getline(ss, temp, ',');
+        r.price = stod(temp);
+        getline(ss, temp, ',');
+        r.units_sold = stoi(temp);
+        getline(ss, temp, ',');
+        r.rating = stod(temp);
+        // remaining field (in_stock) is ignored
+
+        data.push_back(r);
+    }
+    file.close();
+
+    int choice;
+    cout << "Sort by:\n";
+    cout << "1. Price\n";
+    cout << "2. Units Sold\n";
+    cout << "3. Rating\n";
+    cout << "Enter choice: ";
+    cin >> choice;
+
+    if (choice < 1 || choice > 3) {
+        cout << "Invalid Choice! " << endl;
+        return 1;
+    }
+
+    if (!data.empty()) {
+        quickSort(data, 0, data.size() - 1, choice);
+    }
+
+    // Choose output filename
+    string filename;
+    if (choice == 1)
+        filename = "sorted_by_value1.csv";
+    else if (choice == 2)
+        filename = "sorted_by_value2.csv";
+    else
+        filename = "sorted_by_value3.csv";
+
+    // Create output CSV
+    ofstream outFile(filename);
+    // Write header
+    outFile << "Name,Value1,Value2,Value3\n";
+    // Write sorted data
+    for (Record r : data) {
+        outFile << r.name << ","
+                << r.price << ","
+                << r.units_sold << ","
+                << r.rating << "\n";
+    }
+    outFile.close();
+
+    cout << "\nSorted data saved to " << filename << endl;
+    return 0;
 }
-int main()
-{
-   ifstream file("ecommerce_dataset_+1m.csv");
-   if (!file)
-   {
-       cout << "Error opening file!" << endl;
-       return 1;
-   }
-   cout << "File opened successfully!" << endl;
-   string line;
-   // Skip the header row
-   getline(file, line);
-   vector<Order> orders;
-   while (getline(file, line))
-   {
-      stringstream ss(line);
-      Order order;
-      getline(ss, order.orderID, ',');
-      getline(ss, order.orderDate, ',');
-      orders.push_back(order);
-   }
-   cout << "Total Orders Read : " << orders.size() << endl;
-   mergeSort(orders, 0, orders.size() - 1);
-   cout << "\nFirst 20 Sorted Customer Orders:\n\n";
-   cout << "Order ID\tOrder Date\n";
-   cout << "-----------------------------------------------\n";
-   for (int i = 0; i < 20 && i < orders.size(); i++)
-   {
-      cout << orders[i].orderID << "\t" << orders[i].orderDate << endl;
-   }
-   file.close();
-   return 0;
