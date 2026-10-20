@@ -10,15 +10,15 @@ int main() {
     int n = subjects.size();
     vector<vector<int>> graph(n, vector<int>(n, 0));
 
-    int m;
-    cout << "Enter number of subject conflicts: ";
-    cin >> m;
-
     cout << "Subject IDs:\n";
     for (int i = 0; i < n; i++)
         cout << i << " - " << subjects[i] << "\n";
 
-    cout << "\nEnter conflicting subject pairs (u v):\n";
+    int m;
+    cout << "\nEnter number of conflicts: ";
+    cin >> m;
+
+    cout << "Enter conflicting subject pairs (u v):\n";
     for (int i = 0; i < m; i++) {
         int u, v;
         cin >> u >> v;
@@ -27,25 +27,40 @@ int main() {
             graph[u][v] = graph[v][u] = 1;
     }
 
-    // Greedy graph coloring
+    // Greedy Graph Coloring
     vector<int> color(n, -1);
 
     for (int u = 0; u < n; u++) {
         vector<bool> used(n, false);
 
-        for (int v = 0; v < n; v++)
+        for (int v = 0; v < n; v++) {
             if (graph[u][v] && color[v] != -1)
                 used[color[v]] = true;
+        }
 
         int c = 0;
-        while (used[c])
+        while (c < n && used[c])
             c++;
 
         color[u] = c;
     }
 
-    // Room allocation
+    // Display Colors
+    vector<string> colors = {
+        "Red", "Green", "Blue", "Yellow", "Orange"
+    };
+
+    cout << "\n----- GRAPH COLORING RESULT -----\n";
+
+    for (int i = 0; i < n; i++) {
+        cout << subjects[i]
+             << " -> " << colors[color[i]]
+             << " (Slot " << color[i] + 1 << ")\n";
+    }
+
+    // Room Allocation
     int rooms, capacity;
+
     cout << "\nEnter number of rooms: ";
     cin >> rooms;
 
@@ -53,8 +68,8 @@ int main() {
     cin >> capacity;
 
     vector<int> students(n);
-    cout << "\nEnter student count for each subject:\n";
 
+    cout << "\nEnter student count for each subject:\n";
     for (int i = 0; i < n; i++) {
         cout << subjects[i] << ": ";
         cin >> students[i];
@@ -62,10 +77,11 @@ int main() {
 
     int slots = *max_element(color.begin(), color.end()) + 1;
 
-    cout << "\n----- EXAM TIMETABLE -----\n";
+    cout << "\n----- FINAL EXAM TIMETABLE -----\n";
 
     for (int s = 0; s < slots; s++) {
-        cout << "\nTime Slot " << s + 1 << ":\n";
+        cout << "\nSlot " << s + 1
+             << " (" << colors[s] << "):\n";
 
         int available = rooms * capacity;
 
@@ -83,7 +99,8 @@ int main() {
         }
     }
 
-    cout << "\nTotal time slots required: " << slots << "\n";
+    cout << "\nTotal Colors Used: " << slots;
+    cout << "\nTotal Exam Slots Required: " << slots << "\n";
 
     return 0;
 }
